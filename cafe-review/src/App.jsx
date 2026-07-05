@@ -822,16 +822,17 @@ function AdminPanel({ config, setConfig, onExit }) {
           <div style={A.wideCard}>
             <div style={{ padding:"18px 22px", borderBottom:"1px solid #f0f0ec" }}>
               <div style={{ fontWeight:700, fontSize:15 }}>QR Codes</div>
-              <div style={{ fontSize:13, color:"#999", marginTop:2 }}>Edit the Google Review link for each location — QR updates instantly</div>
+              <div style={{ fontSize:13, color:"#999", marginTop:2 }}>QR opens your review app · Google Review link is where customers go after copying their review</div>
             </div>
             <div style={{ padding:"20px 22px" }}>
               <div style={{ background:"#fffbea", border:"1px solid #f0e060", borderRadius:10, padding:"12px 14px", marginBottom:18, fontSize:13, color:"#7a6000" }}>
-                <strong>How to get your Google Review link:</strong> Go to Google Business Profile → click "Ask for reviews" → copy the link. Paste it below and hit Save.
+                <strong>QR Code</strong> → opens your review app (auto-set) &nbsp;·&nbsp; <strong>Google Review Link</strong> → where customer submits after copying review. Get it from Google Business Profile → "Ask for reviews".
               </div>
-              {draft.locations.filter(l=>l.active).map(loc=>{
-                const qrUrl = `${baseUrl}?loc=${loc.id}`;
-                  <div key={loc.id} style={{ border:"1px solid #e8e8e4", borderRadius:14, padding:"18px 18px", marginBottom:14, background:"#fff" }}>
-                    {/* Header */}
+              {draft.locations.filter(l => l.active).map(loc => {
+                const appUrl = baseUrl + "?loc=" + loc.id;
+                const googleUrl = loc.googleUrl && !loc.googleUrl.includes("YOUR_PLACE_ID") ? loc.googleUrl : "";
+                return (
+                  <div key={loc.id} style={{ border:"1px solid #e8e8e4", borderRadius:14, padding:"18px", marginBottom:14, background:"#fff" }}>
                     <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:16 }}>
                       <div style={{ width:40, height:40, borderRadius:10, background:"#f0f0f0", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, flexShrink:0 }}>☕</div>
                       <div>
@@ -839,41 +840,37 @@ function AdminPanel({ config, setConfig, onExit }) {
                         <div style={{ fontSize:12, color:"#999" }}>{loc.address}</div>
                       </div>
                     </div>
-
-                    {/* QR Code */}
                     <div style={{ display:"flex", justifyContent:"center", marginBottom:14, padding:"14px", background:"#fafaf8", borderRadius:10, border:"1px solid #f0f0ec" }}>
-                      <QRCodeCanvas value={qrUrl} size={150}/>
+                      <QRCodeCanvas value={appUrl} size={150} />
                     </div>
-
-                    {/* Editable Google Review URL */}
+                    <div style={{ fontSize:11, color:"#999", textAlign:"center", marginBottom:14, wordBreak:"break-all" }}>
+                      🔗 QR links to: <span style={{ color:"#2D6A4F", fontWeight:600 }}>{appUrl}</span>
+                    </div>
                     <div style={{ marginBottom:12 }}>
-                      <span style={{ ...A.label, marginBottom:6 }}>Google Review URL</span>
+                      <span style={{ ...A.label, marginBottom:6 }}>Google Review Link (for final submit button)</span>
                       <input
                         style={{ ...A.input, marginBottom:4, fontSize:13 }}
-                        placeholder="Paste your Google Review link here…"
-                        value={loc.googleUrl && !loc.googleUrl.includes("YOUR_PLACE_ID") ? loc.googleUrl : ""}
+                        placeholder="Paste Google Review link — e.g. https://g.page/r/..."
+                        value={googleUrl}
                         onChange={e => updateLoc(loc.id, "googleUrl", e.target.value)}
                       />
-                      <div style={{ fontSize:11, color: qrUrl.includes("YOUR_PLACE_ID") || qrUrl.includes(baseUrl) ? "#e07820" : "#2a9d5c", fontWeight:500 }}>
-                        {loc.googleUrl && !loc.googleUrl.includes("YOUR_PLACE_ID") && loc.googleUrl !== ""
-                          ? "✓ Custom Google Review link set — QR points to this"
-                          : "⚠ No link set — QR currently links to app URL"}
+                      <div style={{ fontSize:11, fontWeight:500, color: googleUrl ? "#2a9d5c" : "#e07820" }}>
+                        {googleUrl ? "✓ Google Review link set" : "⚠ Not set yet — customers won't be redirected after copying review"}
                       </div>
                     </div>
-
-                    {/* Download */}
-                    <button onClick={()=>downloadQR(loc.id, loc.name)}
+                    <button
+                      onClick={() => downloadQR(loc.id, loc.name)}
                       style={{ padding:"8px 14px", borderRadius:8, border:"1.5px solid #e8e8e4", background:"#fff", fontSize:12, fontWeight:600, cursor:"pointer", color:"#555", width:"100%" }}>
                       ↓ Download QR as PNG
                     </button>
-                    <div id={`qr-download-${loc.id}`} style={{ position:"absolute", left:-9999, top:-9999, width:400, height:400 }}>
-                      <QRCodeCanvas value={qrUrl} size={400}/>
+                    <div id={"qr-download-" + loc.id} style={{ position:"absolute", left:-9999, top:-9999, width:400, height:400 }}>
+                      <QRCodeCanvas value={appUrl} size={400} />
                     </div>
                   </div>
                 );
               })}
               <div style={{ background:"#f0f7f4", border:"1px solid #c8e6d8", borderRadius:10, padding:"12px 14px", fontSize:13, color:"#1a5c3a" }}>
-                <strong>Remember:</strong> After updating links, hit <strong>"Save changes"</strong> at the top — then download your QR codes.
+                <strong>Remember:</strong> Hit <strong>"Save changes"</strong> at the top after updating links, then download QR codes.
               </div>
             </div>
           </div>
