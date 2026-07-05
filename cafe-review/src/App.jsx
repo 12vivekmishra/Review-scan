@@ -204,9 +204,9 @@ const DEFAULT_CONFIG = {
   accentColor: "#2D6A4F",
   adminPassword: "admin123",
   locations: [
-    { id: 1, name: "Downtown Roastery", address: "12 Oak Street, Downtown", googleUrl: "https://g.page/r/YOUR_PLACE_ID_1/review", active: true },
-    { id: 2, name: "Westside Bloom", address: "88 Maple Ave, Westside", googleUrl: "https://g.page/r/YOUR_PLACE_ID_2/review", active: true },
-    { id: 3, name: "Northgate Press", address: "5 River Lane, Northgate", googleUrl: "https://g.page/r/YOUR_PLACE_ID_3/review", active: true },
+    { id: 1, name: "Downtown Roastery", address: "12 Oak Street, Downtown", googleUrl: "", qrUrl: "", active: true },
+    { id: 2, name: "Westside Bloom", address: "88 Maple Ave, Westside", googleUrl: "", qrUrl: "", active: true },
+    { id: 3, name: "Northgate Press", address: "5 River Lane, Northgate", googleUrl: "", qrUrl: "", active: true },
   ],
   highlights: ["Coffee", "Food", "Ambience", "Service", "Pastries", "Value"],
 };
@@ -700,7 +700,7 @@ function AdminPanel({ config, setConfig, onExit }) {
   };
 
   const updateLoc = (id,field,val) => setDraft(d=>({...d,locations:d.locations.map(l=>l.id===id?{...l,[field]:val}:l)}));
-  const addLoc = () => { const newId=(Math.max(...draft.locations.map(l=>l.id))||0)+1; setDraft(d=>({...d,locations:[...d.locations,{id:newId,name:"New Location",address:"",googleUrl:"",active:true}]})); };
+  const addLoc = () => { const newId=(Math.max(...draft.locations.map(l=>l.id))||0)+1; setDraft(d=>({...d,locations:[...d.locations,{id:newId,name:"New Location",address:"",googleUrl:"",qrUrl:"",active:true}]})); };
   const removeLoc = (id) => setDraft(d=>({...d,locations:d.locations.filter(l=>l.id!==id)}));
   const updateHL = (i,val) => setDraft(d=>{const h=[...d.highlights];h[i]=val;return{...d,highlights:h};});
   const addHL = () => setDraft(d=>({...d,highlights:[...d.highlights,"New Tag"]}));
@@ -822,55 +822,84 @@ function AdminPanel({ config, setConfig, onExit }) {
           <div style={A.wideCard}>
             <div style={{ padding:"18px 22px", borderBottom:"1px solid #f0f0ec" }}>
               <div style={{ fontWeight:700, fontSize:15 }}>QR Codes</div>
-              <div style={{ fontSize:13, color:"#999", marginTop:2 }}>QR opens your review app · Google Review link is where customers go after copying their review</div>
+              <div style={{ fontSize:13, color:"#999", marginTop:2 }}>Set QR link and Google Review link independently per location</div>
             </div>
             <div style={{ padding:"20px 22px" }}>
-              <div style={{ background:"#fffbea", border:"1px solid #f0e060", borderRadius:10, padding:"12px 14px", marginBottom:18, fontSize:13, color:"#7a6000" }}>
-                <strong>QR Code</strong> → opens your review app (auto-set) &nbsp;·&nbsp; <strong>Google Review Link</strong> → where customer submits after copying review. Get it from Google Business Profile → "Ask for reviews".
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:18 }}>
+                <div style={{ background:"#f0f7f4", border:"1px solid #c8e6d8", borderRadius:10, padding:"12px 14px", fontSize:12, color:"#1a5c3a" }}>
+                  <div style={{ fontWeight:700, marginBottom:4 }}>📱 QR Code URL</div>
+                  Your review app link — customers scan this to leave a review
+                </div>
+                <div style={{ background:"#fff8f0", border:"1px solid #f0d8b0", borderRadius:10, padding:"12px 14px", fontSize:12, color:"#7a4000" }}>
+                  <div style={{ fontWeight:700, marginBottom:4 }}>⭐ Google Review URL</div>
+                  Where customers go after copying their review to submit it
+                </div>
               </div>
               {draft.locations.filter(l => l.active).map(loc => {
-                const appUrl = baseUrl + "?loc=" + loc.id;
-                const googleUrl = loc.googleUrl && !loc.googleUrl.includes("YOUR_PLACE_ID") ? loc.googleUrl : "";
+                const qrLink = loc.qrUrl && loc.qrUrl !== "" ? loc.qrUrl : baseUrl + "?loc=" + loc.id;
+                const googleLink = loc.googleUrl && loc.googleUrl !== "" ? loc.googleUrl : "";
                 return (
-                  <div key={loc.id} style={{ border:"1px solid #e8e8e4", borderRadius:14, padding:"18px", marginBottom:14, background:"#fff" }}>
-                    <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:16 }}>
+                  <div key={loc.id} style={{ border:"1px solid #e8e8e4", borderRadius:14, padding:"18px", marginBottom:16, background:"#fff" }}>
+                    {/* Location header */}
+                    <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:18 }}>
                       <div style={{ width:40, height:40, borderRadius:10, background:"#f0f0f0", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, flexShrink:0 }}>☕</div>
                       <div>
                         <div style={{ fontSize:15, fontWeight:700, color:"#111" }}>{loc.name}</div>
                         <div style={{ fontSize:12, color:"#999" }}>{loc.address}</div>
                       </div>
                     </div>
-                    <div style={{ display:"flex", justifyContent:"center", marginBottom:14, padding:"14px", background:"#fafaf8", borderRadius:10, border:"1px solid #f0f0ec" }}>
-                      <QRCodeCanvas value={appUrl} size={150} />
+
+                    {/* QR preview */}
+                    <div style={{ display:"flex", justifyContent:"center", marginBottom:12, padding:"14px", background:"#fafaf8", borderRadius:10, border:"1px solid #f0f0ec" }}>
+                      <QRCodeCanvas value={qrLink} size={140} />
                     </div>
-                    <div style={{ fontSize:11, color:"#999", textAlign:"center", marginBottom:14, wordBreak:"break-all" }}>
-                      🔗 QR links to: <span style={{ color:"#2D6A4F", fontWeight:600 }}>{appUrl}</span>
-                    </div>
-                    <div style={{ marginBottom:12 }}>
-                      <span style={{ ...A.label, marginBottom:6 }}>Google Review Link (for final submit button)</span>
+
+                    {/* QR URL field */}
+                    <div style={{ marginBottom:16 }}>
+                      <span style={{ ...A.label, marginBottom:6, color:"#1a5c3a" }}>📱 QR Code URL</span>
                       <input
-                        style={{ ...A.input, marginBottom:4, fontSize:13 }}
-                        placeholder="Paste Google Review link — e.g. https://g.page/r/..."
-                        value={googleUrl}
-                        onChange={e => updateLoc(loc.id, "googleUrl", e.target.value)}
+                        style={{ ...A.input, marginBottom:4, fontSize:13, borderColor:"#c8e6d8" }}
+                        placeholder={"Default: " + baseUrl + "?loc=" + loc.id}
+                        value={loc.qrUrl || ""}
+                        onChange={e => updateLoc(loc.id, "qrUrl", e.target.value)}
                       />
-                      <div style={{ fontSize:11, fontWeight:500, color: googleUrl ? "#2a9d5c" : "#e07820" }}>
-                        {googleUrl ? "✓ Google Review link set" : "⚠ Not set yet — customers won't be redirected after copying review"}
+                      <div style={{ fontSize:11, fontWeight:500, color:"#2a9d5c" }}>
+                        {loc.qrUrl && loc.qrUrl !== ""
+                          ? "✓ Custom QR link: " + loc.qrUrl
+                          : "Using default app URL: " + baseUrl + "?loc=" + loc.id}
                       </div>
                     </div>
+
+                    {/* Google Review URL field */}
+                    <div style={{ marginBottom:14, padding:"14px", background:"#fff8f0", borderRadius:10, border:"1px solid #f0d8b0" }}>
+                      <span style={{ ...A.label, marginBottom:6, color:"#7a4000" }}>⭐ Google Review URL</span>
+                      <input
+                        style={{ ...A.input, marginBottom:4, fontSize:13, borderColor:"#f0d8b0" }}
+                        placeholder="https://g.page/r/YOUR_PLACE_ID/review"
+                        value={loc.googleUrl || ""}
+                        onChange={e => updateLoc(loc.id, "googleUrl", e.target.value)}
+                      />
+                      <div style={{ fontSize:11, fontWeight:500, color: googleLink ? "#e07820" : "#e05050" }}>
+                        {googleLink
+                          ? "✓ Google Review link set — customers will be redirected here"
+                          : "⚠ Not set — get this from Google Business Profile → Ask for reviews"}
+                      </div>
+                    </div>
+
+                    {/* Download button */}
                     <button
                       onClick={() => downloadQR(loc.id, loc.name)}
-                      style={{ padding:"8px 14px", borderRadius:8, border:"1.5px solid #e8e8e4", background:"#fff", fontSize:12, fontWeight:600, cursor:"pointer", color:"#555", width:"100%" }}>
+                      style={{ padding:"9px 14px", borderRadius:8, border:"1.5px solid #e8e8e4", background:"#fff", fontSize:12, fontWeight:600, cursor:"pointer", color:"#555", width:"100%" }}>
                       ↓ Download QR as PNG
                     </button>
                     <div id={"qr-download-" + loc.id} style={{ position:"absolute", left:-9999, top:-9999, width:400, height:400 }}>
-                      <QRCodeCanvas value={appUrl} size={400} />
+                      <QRCodeCanvas value={qrLink} size={400} />
                     </div>
                   </div>
                 );
               })}
               <div style={{ background:"#f0f7f4", border:"1px solid #c8e6d8", borderRadius:10, padding:"12px 14px", fontSize:13, color:"#1a5c3a" }}>
-                <strong>Remember:</strong> Hit <strong>"Save changes"</strong> at the top after updating links, then download QR codes.
+                <strong>Remember:</strong> Hit <strong>"Save changes"</strong> at the top after updating — then download your QR codes.
               </div>
             </div>
           </div>
