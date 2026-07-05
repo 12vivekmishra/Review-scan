@@ -635,7 +635,6 @@ function ReviewFlow({ config, preselectedLocId }) {
 
         <a
           href={location?.googleUrl}
-          target="_blank"
           rel="noopener noreferrer"
           style={{
             display:"flex", alignItems:"center", justifyContent:"center", gap:8,
