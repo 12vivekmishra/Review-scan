@@ -829,10 +829,7 @@ function AdminPanel({ config, setConfig, onExit }) {
                 <strong>How to get your Google Review link:</strong> Go to Google Business Profile → click "Ask for reviews" → copy the link. Paste it below and hit Save.
               </div>
               {draft.locations.filter(l=>l.active).map(loc=>{
-                const qrUrl = loc.googleUrl && loc.googleUrl !== "" && !loc.googleUrl.includes("YOUR_PLACE_ID")
-                  ? loc.googleUrl
-                  : `${baseUrl}?loc=${loc.id}`;
-                return (
+                const qrUrl = `${baseUrl}?loc=${loc.id}`;
                   <div key={loc.id} style={{ border:"1px solid #e8e8e4", borderRadius:14, padding:"18px 18px", marginBottom:14, background:"#fff" }}>
                     {/* Header */}
                     <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:16 }}>
